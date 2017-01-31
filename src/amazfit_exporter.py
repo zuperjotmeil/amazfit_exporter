@@ -14,7 +14,9 @@ def db_to_gpx(db,dest):
 		for running_session in running_sessions:
 			track_id=running_session[0]
 			tiempo_init=running_session[1]
-			cur.execute('SELECT location_data.latitude, location_data.longitude, location_data.altitude, location_data.timestamp from location_data, sport_summary where location_data.track_id=' + str(track_id) + ' and sport_summary.type=2 ')
+			# ignore false and extra data points.  Also fixed the bug generating duplicate data.
+			cur.execute('SELECT location_data.latitude, location_data.longitude, location_data.altitude, location_data.timestamp from location_data where location_data.track_id=' + str(track_id) + ' and location_data.point_type > 1')
+#			cur.execute('SELECT location_data.latitude, location_data.longitude, location_data.altitude, location_data.timestamp from location_data, sport_summary where location_data.track_id=' + str(track_id) + ' and sport_summary.type=2 ')
 			datos = cur.fetchall()
 			year=datetime.datetime.fromtimestamp(running_session[1]/1000).strftime('%Y')
 			month=datetime.datetime.fromtimestamp(running_session[1]/1000).strftime('%m')
@@ -53,15 +55,21 @@ def db_to_gpx(db,dest):
 					hour=datetime.datetime.fromtimestamp(time).strftime('%H')
 					minute=datetime.datetime.fromtimestamp(time).strftime('%M')
 					second=datetime.datetime.fromtimestamp(time).strftime('%S')			
-					cur.execute('SELECT rate from heart_rate where time=' + str(round(time)*1000))
+					# Make it prettier and more flexible in the future
+					cur.execute('SELECT rate,step_freq from heart_rate where heart_rate.time = ?', (round(time)*1000,))
+#					cur.execute('SELECT rate from heart_rate where time=' + str(round(time)*1000))
 					rate=cur.fetchone()
 					out.write('   <trkpt lon="'+longitud+'" lat="'+latitud+'">'+ '\r\n')
 					out.write('    <ele>'+altitud+'</ele>'+ '\r\n')
 					out.write('    <time>'+year+'-'+month+'-'+day+'T'+hour+':'+minute+':'+second+'.000Z</time>'+ '\r\n')
-					if rate is not None:
+					# Check that you have a valid HR reading
+					if rate is not None and rate[0] > 0:
+#					if rate is not None:
 						out.write('    <extensions>'+ '\r\n')
 						out.write('     <gpxtpx:TrackPointExtension>'+ '\r\n')
 						out.write(' 	 <gpxtpx:hr>'+str(int(rate[0]))+'</gpxtpx:hr>'+ '\r\n')
+						# Add the cadence data
+						out.write(' 	 <gpxtpx:cad>'+str(int(rate[1]*30))+'</gpxtpx:cad>'+ '\r\n')
 						out.write('     </gpxtpx:TrackPointExtension>'+ '\r\n')
 						out.write('    </extensions>'+ '\r\n')
 					out.write('   </trkpt>'+ '\r\n')
