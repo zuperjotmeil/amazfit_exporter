@@ -18,6 +18,12 @@ def db_to_gpx(db,dest):
 			cur.execute('SELECT location_data.latitude, location_data.longitude, location_data.altitude, location_data.timestamp from location_data where location_data.track_id=' + str(track_id) + ' and location_data.point_type > 1')
 #			cur.execute('SELECT location_data.latitude, location_data.longitude, location_data.altitude, location_data.timestamp from location_data, sport_summary where location_data.track_id=' + str(track_id) + ' and sport_summary.type=2 ')
 			datos = cur.fetchall()
+			cad1 = 0
+			cad2 = 0 
+			cad3 = 0 
+			cad4 = 0 
+			cad5 = 0
+			cad_avg = 0 
 			year=datetime.datetime.fromtimestamp(running_session[1]/1000).strftime('%Y')
 			month=datetime.datetime.fromtimestamp(running_session[1]/1000).strftime('%m')
 			day=datetime.datetime.fromtimestamp(running_session[1]/1000).strftime('%d')
@@ -67,11 +73,18 @@ def db_to_gpx(db,dest):
 					# Check that you have a valid HR reading
 					if rate is not None and rate[0] > 0:
 #					if rate is not None:
+						# push the new step count in and recalculate the cadence
+						cad1 = cad2
+						cad2 = cad3
+						cad3 = cad4
+						cad4 = cad5
+						cad5 = rate[1]
+						cad_avg = int((cad1 + cad2 + cad3 + cad4 + cad5)/5*30)
 						out.write('    <extensions>'+ '\r\n')
 						out.write('     <gpxtpx:TrackPointExtension>'+ '\r\n')
-						out.write(' 	 <gpxtpx:hr>'+str(int(rate[0]))+'</gpxtpx:hr>'+ '\r\n')
+						out.write(' 	 <gpxtpx:hr>'+str(rate[0])+'</gpxtpx:hr>'+ '\r\n')
 						# Add the cadence data
-						out.write(' 	 <gpxtpx:cad>'+str(int(rate[1]*30))+'</gpxtpx:cad>'+ '\r\n')
+						out.write(' 	 <gpxtpx:cad>'+str(cad_avg)+'</gpxtpx:cad>'+ '\r\n')
 						out.write('     </gpxtpx:TrackPointExtension>'+ '\r\n')
 						out.write('    </extensions>'+ '\r\n')
 					out.write('   </trkpt>'+ '\r\n')
