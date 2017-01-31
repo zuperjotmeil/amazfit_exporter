@@ -47,7 +47,7 @@ def db_to_gpx(db,dest):
 				for dato in datos:
 					latitud=str(dato[0])
 					longitud=str(dato[1])
-					altitud=str(round(dato[2],1))
+					altitud = str(round(dato[2],1))
 					time=((dato[3]+tiempo_init)/1000)
 					year=datetime.datetime.fromtimestamp(time).strftime('%Y')
 					month=datetime.datetime.fromtimestamp(time).strftime('%m')
@@ -56,11 +56,13 @@ def db_to_gpx(db,dest):
 					minute=datetime.datetime.fromtimestamp(time).strftime('%M')
 					second=datetime.datetime.fromtimestamp(time).strftime('%S')			
 					# Make it prettier and more flexible in the future
-					cur.execute('SELECT rate,step_freq from heart_rate where heart_rate.time = ?', (round(time)*1000,))
+					cur.execute('SELECT rate,step_count from heart_rate where heart_rate.time = ?', (round(time)*1000,))
 #					cur.execute('SELECT rate from heart_rate where time=' + str(round(time)*1000))
 					rate=cur.fetchone()
 					out.write('   <trkpt lon="'+longitud+'" lat="'+latitud+'">'+ '\r\n')
-					out.write('    <ele>'+altitud+'</ele>'+ '\r\n')
+					# only write altitude if valid (greater than -1000 meters)
+					if dato[2] > -1000:
+						out.write('    <ele>'+altitud+'</ele>'+ '\r\n')
 					out.write('    <time>'+year+'-'+month+'-'+day+'T'+hour+':'+minute+':'+second+'.000Z</time>'+ '\r\n')
 					# Check that you have a valid HR reading
 					if rate is not None and rate[0] > 0:
