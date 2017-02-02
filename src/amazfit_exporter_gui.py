@@ -20,8 +20,8 @@ class MyWindowClass(QtWidgets.QMainWindow, form_class):
 	def gpx_fromdb(self):
 		db = self.text_path_orig.text()
 		dest = self.text_path_dest.text()
-		amazfit_exporter.db_to_gpx(db,dest)
-		self.endlabel.setText("GPX files exportation finished")
+		amazfit_exporter.db_to_tcx(db,dest)
+		self.endlabel.setText("TCX files exportation finished")
 app = QtWidgets.QApplication(sys.argv)
 MyWindow = MyWindowClass(None)
 MyWindow.show()
