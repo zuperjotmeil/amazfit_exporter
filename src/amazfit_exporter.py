@@ -6,17 +6,18 @@ import os
 import json
 from collections import deque
 
-def db_to_tcx(db,dest):
-	con = lite.connect(db)
+def db_to_tcx(db,dest,begtime):
 
+	# Connect to the sport database
+	con = lite.connect(db)
 	with con:
 		cur = con.cursor()    
-		cur.execute('SELECT track_id, start_time, type, content from sport_summary where type=1 or type=2 or type=4')
+		cur.execute('SELECT track_id, start_time, type, content from sport_summary where track_id>'+ str(begtime) + ' and (type=1 or type=2 or type=4)')
 		running_sessions = cur.fetchall()
 		for running_session in running_sessions:
 			# load the summary information JSON
 			content_json = json.loads(running_session[3])
-			
+			# Get the track ID and starting time
 			track_id=running_session[0]
 			tiempo_init=running_session[1]
 			# find out what type of activity it is
