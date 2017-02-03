@@ -4,6 +4,7 @@ import sys
 import datetime
 import os
 import json
+from collections import deque
 
 def db_to_tcx(db,dest):
 	con = lite.connect(db)
@@ -27,11 +28,8 @@ def db_to_tcx(db,dest):
 				activity = "treadmill"
 			else:
 				activity = "unknwon"
-			cad1 = 0
-			cad2 = 0 
-			cad3 = 0 
-			cad4 = 0 
-			cad5 = 0
+			#initialize
+			cad = deque([])
 			cad_avg = 0 
 			step_cum = 0
 			# calculate stride length for treadmill runs because Amazfit stride info is incorrect
@@ -85,28 +83,27 @@ def db_to_tcx(db,dest):
 							out.write('       <Value>'+ str(dato[0]) +'</Value>' + '\n')
 							out.write('      </HeartRateBpm>' + '\n')
 						# push the new step count in and recalculate the cadence
-						cad1 = cad2
-						cad2 = cad3
-						cad3 = cad4
-						cad4 = cad5
-						cad5 = dato[1]
-						cad_avg = int((cad1 + cad2 + cad3 + cad4 + cad5)/5*30)
-						#Write the cadence
-						out.write('      <Extensions>'+ '\n')
-						out.write('       <TPX xmlns="http://www.garmin.com/xmlschemas/ActivityExtension/v2">'+ '\n')
-						out.write('        <RunCadence>'+ str(cad_avg) + '</RunCadence>' + '\n')
-						out.write('       </TPX>' + '\n')
-						out.write('      </Extensions>'+ '\n')
+						if dato[1] > 0:
+							cad.append(dato[1])
+						if len(cad) > 30:
+							cad.popleft()
+							cad_avg = int(sum(cad)/len(cad)*30)
+							#Write the cadence
+							out.write('      <Extensions>'+ '\n')
+							out.write('       <TPX xmlns="http://www.garmin.com/xmlschemas/ActivityExtension/v2">'+ '\n')
+							out.write('        <RunCadence>'+ str(cad_avg) + '</RunCadence>' + '\n')
+							out.write('       </TPX>' + '\n')
+							out.write('      </Extensions>'+ '\n')
 						out.write('     </Trackpoint>' + '\n')
 				else:
 				# ignore false and extra data points.  Also fixed the bug generating duplicate data.
-					cur.execute('SELECT location_data.latitude, location_data.longitude, location_data.altitude, location_data.timestamp from location_data where location_data.track_id=' + str(track_id) + ' and location_data.point_type > 1')
+					cur.execute('SELECT location_data.latitude, location_data.longitude, location_data.altitude, location_data.timestamp from location_data where location_data.track_id=' + str(track_id) + ' and location_data.point_type > 0')
 					datos = cur.fetchall()
 					for dato in datos:
 						latitud=str(dato[0])
 						longitud=str(dato[1])
 						altitud = str(round(dato[2],1))
-						time=((dato[3]+tiempo_init)/1000)
+						time=((dato[3] +tiempo_init)/1000)
 						year=datetime.datetime.utcfromtimestamp(time).strftime('%Y')
 						month=datetime.datetime.utcfromtimestamp(time).strftime('%m')
 						day=datetime.datetime.utcfromtimestamp(time).strftime('%d')
@@ -133,18 +130,17 @@ def db_to_tcx(db,dest):
 							out.write('       <Value>'+ str(rate[0]) +'</Value>' + '\n')
 							out.write('      </HeartRateBpm>' + '\n')
 							# push the new step count in and recalculate the cadence
-							cad1 = cad2
-							cad2 = cad3
-							cad3 = cad4
-							cad4 = cad5
-							cad5 = rate[1]
-							cad_avg = int((cad1 + cad2 + cad3 + cad4 + cad5)/5*30)
-							#Write the cadence
-							out.write('      <Extensions>'+ '\n')
-							out.write('       <TPX xmlns="http://www.garmin.com/xmlschemas/ActivityExtension/v2">'+ '\n')
-							out.write('        <RunCadence>'+ str(cad_avg) + '</RunCadence>' + '\n')
-							out.write('       </TPX>' + '\n')
-							out.write('      </Extensions>'+ '\n')
+							if rate[1] > 0:
+								cad.append(rate[1])
+							if len(cad) > 30:
+								cad.popleft()
+								cad_avg = int(sum(cad)/len(cad)*30)
+								#Write the cadence
+								out.write('      <Extensions>'+ '\n')
+								out.write('       <TPX xmlns="http://www.garmin.com/xmlschemas/ActivityExtension/v2">'+ '\n')
+								out.write('        <RunCadence>'+ str(cad_avg) + '</RunCadence>' + '\n')
+								out.write('       </TPX>' + '\n')
+								out.write('      </Extensions>'+ '\n')
 						out.write('     </Trackpoint>' + '\n')
 				out.write('    </Track>'+ '\n')
 				out.write('   </Lap>'+ '\n')
