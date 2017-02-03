@@ -11,8 +11,8 @@ def db_to_tcx(db,dest,begtime):
 	# Connect to the sport database
 	con = lite.connect(db)
 	with con:
-		cur = con.cursor()    
-		cur.execute('SELECT track_id, start_time, type, content from sport_summary where track_id>'+ str(begtime) + ' and (type=1 or type=2 or type=4)')
+		cur = con.cursor()
+		cur.execute('SELECT track_id, start_time, type, content from sport_summary where track_id>'+ str(begtime) + ' and (type=1 or type=2 or type=3 or type=4)')
 		running_sessions = cur.fetchall()
 		for running_session in running_sessions:
 			# load the summary information JSON
@@ -25,13 +25,15 @@ def db_to_tcx(db,dest,begtime):
 				activity = "running"
 			elif running_session[2] == 2:
 				activity = "walking"
+			elif" running_session[2] ==3:
+				activity = "trail running"
 			elif running_session[2] == 4:
 				activity = "treadmill"
 			else:
 				activity = "unknwon"
 			#initialize
 			cad = deque([])
-			cad_avg = 0 
+			cad_avg = 0
 			step_cum = 0
 			# calculate stride length for treadmill runs because Amazfit stride info is incorrect
 			step_tot = content_json['step_count']
@@ -48,7 +50,7 @@ def db_to_tcx(db,dest,begtime):
 				os.remove(dest+'/'+year+month+day+'_'+hour+minute+second+'.tcx')
 			except OSError:
 				pass
-			with open(dest+'/'+year+month+day+'_'+hour+minute+second+'Z.tcx', 'a') as out:	
+			with open(dest+'/'+year+month+day+'_'+hour+minute+second+'Z.tcx', 'a') as out:
 				# Write Header
 				out.write('<?xml version="1.0" encoding="UTF-8"?>' + '\n')
 				out.write('<TrainingCenterDatabase xsi:schemaLocation="http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2 http://www.garmin.com/xmlschemas/TrainingCenterDatabasev2.xsd" xmlns:ns5="http://www.garmin.com/xmlschemas/ActivityGoals/v1" xmlns:ns3="http://www.garmin.com/xmlschemas/ActivityExtension/v2" xmlns:ns2="http://www.garmin.com/xmlschemas/UserProfile/v2" xmlns="http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">' + '\n')
@@ -69,7 +71,7 @@ def db_to_tcx(db,dest,begtime):
 						day=datetime.datetime.utcfromtimestamp(time).strftime('%d')
 						hour=datetime.datetime.utcfromtimestamp(time).strftime('%H')
 						minute=datetime.datetime.utcfromtimestamp(time).strftime('%M')
-						second=datetime.datetime.utcfromtimestamp(time).strftime('%S')			
+						second=datetime.datetime.utcfromtimestamp(time).strftime('%S')
 						# Write the trackpoint
 						out.write('     <Trackpoint>' + '\n')
 						out.write('      <Time>'+year+'-'+month+'-'+day+'T'+hour+':'+minute+':'+second+ 'Z</Time>'+ '\n')
@@ -110,7 +112,7 @@ def db_to_tcx(db,dest,begtime):
 						day=datetime.datetime.utcfromtimestamp(time).strftime('%d')
 						hour=datetime.datetime.utcfromtimestamp(time).strftime('%H')
 						minute=datetime.datetime.utcfromtimestamp(time).strftime('%M')
-						second=datetime.datetime.utcfromtimestamp(time).strftime('%S')			
+						second=datetime.datetime.utcfromtimestamp(time).strftime('%S')
 						# Make it prettier and more flexible in the future
 						cur.execute('SELECT rate,step_count from heart_rate where heart_rate.time = ?', (round(time)*1000,))
 						rate=cur.fetchone()
