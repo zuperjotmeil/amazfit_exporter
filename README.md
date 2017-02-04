@@ -4,10 +4,10 @@ This python script helps you to export your huami Amazfit activities to other pl
 At current version the script can be used in both CLI or GUI modes:
 
 For CLI:
-- python3 amazfit_exporter_cli.py sport_data.db /path/to/destination/folder
+- py amazfit_exporter_cli.py sport_data.db /path/to/destination/folder
 
-For GUI:
-- python3 amazfit_exporter_gui.py
+For GUI: (does not work with the latest version yet)
+- py amazfit_exporter_gui.py
 
 The sport_data.db file has to be get from the Amazfit by ADB, there are two methods for this
 - connect amazfit to pc
@@ -24,3 +24,4 @@ adb pull /data/data/com.huami.watch.sport/databases/sport_data.db
 #CHANGELOG
 -V1.0 generates .gpx file for each activity
 -V1.1 Added GUI
+-V2.0 Changed to TCX format.  Add last sync time option.  Bug fixes.  Add indoor running with no GPS data. Optimize cadence calculation.
