@@ -25,7 +25,7 @@ def db_to_tcx(db,dest,begtime):
 				activity = "running"
 			elif running_session[2] == 2:
 				activity = "walking"
-			elif" running_session[2] ==3:
+			elif running_session[2] ==3:
 				activity = "trail running"
 			elif running_session[2] == 4:
 				activity = "treadmill"
@@ -33,12 +33,14 @@ def db_to_tcx(db,dest,begtime):
 				activity = "unknwon"
 			#initialize
 			cad = deque([])
+			stride = 0
 			cad_avg = 0
 			step_cum = 0
 			# calculate stride length for treadmill runs because Amazfit stride info is incorrect
 			step_tot = content_json['step_count']
 			dist_tot = content_json['distance']
-			stride = dist_tot/step_tot
+			if step_tot > 0:
+				stride = dist_tot/step_tot
 			dist = 0
 			year=datetime.datetime.utcfromtimestamp(running_session[1]/1000).strftime('%Y')
 			month=datetime.datetime.utcfromtimestamp(running_session[1]/1000).strftime('%m')
