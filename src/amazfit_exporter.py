@@ -2,6 +2,7 @@
 import sqlite3 as lite
 import sys
 import datetime
+import time as t
 import os
 import json
 from collections import deque
@@ -12,7 +13,7 @@ def db_to_tcx(db,dest,begtime):
 	con = lite.connect(db)
 	with con:
 		cur = con.cursor()
-		cur.execute('SELECT track_id, start_time, type, content from sport_summary where track_id>'+ str(begtime) + ' and (type=1 or type=2 or type=3 or type=4)')
+		cur.execute('SELECT track_id, start_time, type, content from sport_summary where track_id >'+ str(begtime) + ' and (type=1 or type=2 or type=3 or type=4 or type=5)')
 		running_sessions = cur.fetchall()
 		for running_session in running_sessions:
 			# load the summary information JSON
@@ -29,6 +30,8 @@ def db_to_tcx(db,dest,begtime):
 				activity = "trail running"
 			elif running_session[2] == 4:
 				activity = "treadmill"
+			elif running_session[2] == 5:
+				activity = "bike"
 			else:
 				activity = "unknwon"
 			#initialize
@@ -42,18 +45,20 @@ def db_to_tcx(db,dest,begtime):
 			if step_tot > 0:
 				stride = dist_tot/step_tot
 			dist = 0
-			year=datetime.datetime.utcfromtimestamp(running_session[1]/1000).strftime('%Y')
-			month=datetime.datetime.utcfromtimestamp(running_session[1]/1000).strftime('%m')
-			day=datetime.datetime.utcfromtimestamp(running_session[1]/1000).strftime('%d')
-			hour=datetime.datetime.utcfromtimestamp(running_session[1]/1000).strftime('%H')
-			minute=datetime.datetime.utcfromtimestamp(running_session[1]/1000).strftime('%M')
-			second=datetime.datetime.utcfromtimestamp(running_session[1]/1000).strftime('%S')
+			session_strt = running_session[1]/1000
+			year=datetime.datetime.utcfromtimestamp(session_strt).strftime('%Y')
+			month=datetime.datetime.utcfromtimestamp(session_strt).strftime('%m')
+			day=datetime.datetime.utcfromtimestamp(session_strt).strftime('%d')
+			hour=datetime.datetime.utcfromtimestamp(session_strt).strftime('%H')
+			minute=datetime.datetime.utcfromtimestamp(session_strt).strftime('%M')
+			second=datetime.datetime.utcfromtimestamp(session_strt).strftime('%S')
 			try:
 				os.remove(dest+'/'+year+month+day+'_'+hour+minute+second+'.tcx')
 			except OSError:
 				pass
 			with open(dest+'/'+year+month+day+'_'+hour+minute+second+'Z.tcx', 'a') as out:
 				# Write Header
+				print(t.strftime('%Y-%m-%d %H:%M:%S', t.localtime(session_strt))+' activity:' + activity + ' syncing...')
 				out.write('<?xml version="1.0" encoding="UTF-8"?>' + '\n')
 				out.write('<TrainingCenterDatabase xsi:schemaLocation="http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2 http://www.garmin.com/xmlschemas/TrainingCenterDatabasev2.xsd" xmlns:ns5="http://www.garmin.com/xmlschemas/ActivityGoals/v1" xmlns:ns3="http://www.garmin.com/xmlschemas/ActivityExtension/v2" xmlns:ns2="http://www.garmin.com/xmlschemas/UserProfile/v2" xmlns="http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">' + '\n')
 				out.write(' <Activities>' + '\n')
