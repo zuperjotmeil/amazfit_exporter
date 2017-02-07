@@ -30,3 +30,5 @@ adb pull /data/data/com.huami.watch.sport/databases/sport_data.db
  
  -V2.1 Add Bike and Trail Running Mode. Remember when last time sync so one can need to update new data. real-time sync feedback.
  
+ -V2.2 Add Device name so Strava will use the barometric sensor readings for elevation.
+ 
