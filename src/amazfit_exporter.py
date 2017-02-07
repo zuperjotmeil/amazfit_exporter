@@ -64,6 +64,7 @@ def db_to_tcx(db,dest,begtime):
 				out.write(' <Activities>' + '\n')
 				out.write('  <Activity Sport="'+ activity + '">' + '\n')
 				out.write('   <Id>'+year+'-'+month+'-'+day+'T'+hour+':'+minute+':'+second+ 'Z'+ '</Id>'+ '\n')
+				out.write('   <Creator><Name>Huami Amazfit Pace</Name></Creator>\n')
 				out.write('   <Lap StartTime="'+ year+'-'+month+'-'+day+'T'+hour+':'+minute+':'+second +'Z">' + '\n')
 				out.write('    <Track>' + '\n')
 
