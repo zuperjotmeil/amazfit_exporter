@@ -25,5 +25,5 @@ amazfit_exporter.db_to_tcx(db,dest,upd_begtime)
 
 # Complete without crashing, so update the last update file for next time
 lstupd_f = open(lstupd_file,'w')
-lstupd_f.write(str(curtime))
+lstupd_f.write(str(int(curtime)))
 lstupd_f.close()
