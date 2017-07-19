@@ -7,7 +7,7 @@ import os
 import json
 from collections import deque
 
-def db_to_tcx(db,dest,begtime):
+def db_to_tcx(db,dest,begtime,tz):
 
 	# Connect to the sport database
 	con = lite.connect(db)
@@ -45,20 +45,22 @@ def db_to_tcx(db,dest,begtime):
 			if step_tot > 0:
 				stride = dist_tot/step_tot
 			dist = 0
-			session_strt = running_session[1]/1000
+			session_strt = running_session[1]/1000+tz
 			year=datetime.datetime.utcfromtimestamp(session_strt).strftime('%Y')
 			month=datetime.datetime.utcfromtimestamp(session_strt).strftime('%m')
 			day=datetime.datetime.utcfromtimestamp(session_strt).strftime('%d')
 			hour=datetime.datetime.utcfromtimestamp(session_strt).strftime('%H')
 			minute=datetime.datetime.utcfromtimestamp(session_strt).strftime('%M')
 			second=datetime.datetime.utcfromtimestamp(session_strt).strftime('%S')
+			
+			session_strt2 = running_session[1]/1000
 			try:
 				os.remove(dest+'/'+year+month+day+'_'+hour+minute+second+'.tcx')
 			except OSError:
 				pass
 			with open(dest+'/'+year+month+day+'_'+hour+minute+second+'Z.tcx', 'a') as out:
 				# Write Header
-				print(t.strftime('%Y-%m-%d %H:%M:%S', t.localtime(session_strt))+' activity:' + activity + ' syncing...')
+				print(t.strftime('%Y-%m-%d %H:%M:%S', t.localtime(session_strt2))+' activity:' + activity + ' syncing...')
 				out.write('<?xml version="1.0" encoding="UTF-8"?>' + '\n')
 				out.write('<TrainingCenterDatabase xsi:schemaLocation="http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2 http://www.garmin.com/xmlschemas/TrainingCenterDatabasev2.xsd" xmlns:ns5="http://www.garmin.com/xmlschemas/ActivityGoals/v1" xmlns:ns3="http://www.garmin.com/xmlschemas/ActivityExtension/v2" xmlns:ns2="http://www.garmin.com/xmlschemas/UserProfile/v2" xmlns="http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">' + '\n')
 				out.write(' <Activities>' + '\n')
@@ -73,7 +75,7 @@ def db_to_tcx(db,dest,begtime):
 					cur.execute('SELECT rate, step_count, time from heart_rate where track_id=' + str(track_id))
 					datos = cur.fetchall()
 					for dato in datos:
-						time=dato[2]/1000
+						time=dato[2]/1000+tz
 						year=datetime.datetime.utcfromtimestamp(time).strftime('%Y')
 						month=datetime.datetime.utcfromtimestamp(time).strftime('%m')
 						day=datetime.datetime.utcfromtimestamp(time).strftime('%d')
@@ -119,7 +121,7 @@ def db_to_tcx(db,dest,begtime):
 						latitud=str(dato[0])
 						longitud=str(dato[1])
 						altitud = str(round(dato[2],1))
-						time=((dato[3] +tiempo_init)/1000)
+						time=((dato[3] +tiempo_init)/1000)+tz
 						year=datetime.datetime.utcfromtimestamp(time).strftime('%Y')
 						month=datetime.datetime.utcfromtimestamp(time).strftime('%m')
 						day=datetime.datetime.utcfromtimestamp(time).strftime('%d')
