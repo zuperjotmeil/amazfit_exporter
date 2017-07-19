@@ -110,6 +110,11 @@ def db_to_tcx(db,dest,begtime):
 				# ignore false and extra data points.  Also fixed the bug generating duplicate data.
 					cur.execute('SELECT location_data.latitude, location_data.longitude, location_data.altitude, location_data.timestamp from location_data where location_data.track_id=' + str(track_id) + ' and location_data.point_type > 0')
 					datos = cur.fetchall()
+					cur.execute('SELECT time,rate,step_count from heart_rate')
+					heart_rates = {}
+					for hr in cur.fetchall():
+						if not hr[0] in heart_rates:
+							heart_rates[hr[0]] = hr[1:]
 					for dato in datos:
 						latitud=str(dato[0])
 						longitud=str(dato[1])
@@ -122,8 +127,7 @@ def db_to_tcx(db,dest,begtime):
 						minute=datetime.datetime.utcfromtimestamp(time).strftime('%M')
 						second=datetime.datetime.utcfromtimestamp(time).strftime('%S')
 						# Make it prettier and more flexible in the future
-						cur.execute('SELECT rate,step_count from heart_rate where heart_rate.time = ?', (round(time)*1000,))
-						rate=cur.fetchone()
+						rate = heart_rates.get(round(time) * 1000)
 						# Write the trackpoint
 						out.write('     <Trackpoint>' + '\n')
 						out.write('      <Time>'+year+'-'+month+'-'+day+'T'+hour+':'+minute+':'+second+ 'Z</Time>'+ '\n')
